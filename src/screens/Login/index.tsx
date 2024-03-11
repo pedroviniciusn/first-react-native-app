@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button, Text, TextInput, View, Linking, TouchableOpacity } from 'react-native';
+import { Button, Text, TextInput, View, Linking, TouchableOpacity, Alert } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import * as yup from 'yup';
@@ -9,6 +9,9 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import { styles } from './styles';
 import { useNavigation } from '@react-navigation/native';
 import { AppStackParamList } from '../../routes/stack.routes';
+import { auth } from '../../../firebaseConfig';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { useAuth } from '../../hooks/useAuth';
 
 const schema = yup.object().shape({
   email: yup.string().email('format invalid, please set a correctly email').required(),
@@ -21,6 +24,7 @@ interface LoginProps {
 }
 
 const Login = () => {
+  const { setUser } = useAuth();
   const navigation = useNavigation<NativeStackNavigationProp<AppStackParamList>>();
 
   const {
@@ -35,8 +39,14 @@ const Login = () => {
     resolver: yupResolver(schema),
   });
 
-  const handleClickLogin = (data: LoginProps) => {
-    console.log(data);
+  const handleClickLogin = async (data: LoginProps): Promise<void> => {
+    signInWithEmailAndPassword(auth, data.email, data.password)
+      .then((userCredential) => {
+        setUser(userCredential.user);
+      })
+      .catch((error) => {
+        console.log(error);
+      });
   };
 
   return (
