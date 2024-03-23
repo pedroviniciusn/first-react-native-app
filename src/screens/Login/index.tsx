@@ -10,7 +10,7 @@ import { styles } from './styles';
 import { useNavigation } from '@react-navigation/native';
 import { AppStackParamList } from '../../routes/stack.routes';
 import { auth } from '../../../firebaseConfig';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword, AuthErrorCodes } from 'firebase/auth';
 import { useAuth } from '../../hooks/useAuth';
 
 const schema = yup.object().shape({
@@ -25,6 +25,7 @@ interface LoginProps {
 
 const Login = () => {
   const { setUser } = useAuth();
+
   const navigation = useNavigation<NativeStackNavigationProp<AppStackParamList>>();
 
   const {
@@ -43,9 +44,14 @@ const Login = () => {
     signInWithEmailAndPassword(auth, data.email, data.password)
       .then((userCredential) => {
         setUser(userCredential.user);
+        console.log(userCredential.user)
+        navigation.navigate('Home');
       })
       .catch((error) => {
-        console.log(error);
+        if (error.code === AuthErrorCodes.INVALID_LOGIN_CREDENTIALS)
+          return Alert.alert('Error on login', 'Invalid credentials');
+
+        Alert.alert('Error on login, please try again');
       });
   };
 
